@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - VLAN Management System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <i class="fas fa-network-wired"></i>
+            <span>VLAN Pro</span>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="#overview" class="nav-item active" data-section="overview">
+                <i class="fas fa-chart-line"></i>
+                <span>Overview</span>
+            </a>
+            <a href="#vlans" class="nav-item" data-section="vlans">
+                <i class="fas fa-layer-group"></i>
+                <span>VLANs</span>
+            </a>
+            <a href="#users" class="nav-item" data-section="users">
+                <i class="fas fa-users"></i>
+                <span>Users</span>
+            </a>
+            <a href="#activities" class="nav-item" data-section="activities">
+                <i class="fas fa-history"></i>
+                <span>Activities</span>
+            </a>
+            <a href="#device" class="nav-item" data-section="device">
+                <i class="fas fa-server"></i>
+                <span>Device</span>
+            </a>
+            <a href="#settings" class="nav-item" data-section="settings">
+                <i class="fas fa-cog"></i>
+                <span>Settings</span>
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <a href="/logout" class="logout-btn">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>Logout</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Top Bar -->
+        <div class="topbar">
+            <div class="topbar-left">
+                <button class="sidebar-toggle"><i class="fas fa-bars"></i></button>
+                <h2 id="pageTitle">Overview</h2>
+            </div>
+            <div class="topbar-right">
+                <div class="user-info">
+                    <i class="fas fa-user-circle"></i>
+                    <div>
+                        <p id="userName">User</p>
+                        <small id="userNim">NIM</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Area -->
+        <div class="content-area">
+            <!-- Overview Section -->
+            <section id="overview" class="content-section active">
+                <div class="overview-cards">
+                    <div class="overview-card">
+                        <div class="card-icon total">
+                            <i class="fas fa-layer-group"></i>
+                        </div>
+                        <div class="card-content">
+                            <h3>Total VLANs</h3>
+                            <p id="totalVlans" class="card-number">0</p>
+                        </div>
+                    </div>
+                    <div class="overview-card">
+                        <div class="card-icon active">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div class="card-content">
+                            <h3>Active VLANs</h3>
+                            <p id="activeVlans" class="card-number">0</p>
+                        </div>
+                    </div>
+                    <div class="overview-card">
+                        <div class="card-icon expired">
+                            <i class="fas fa-exclamation-circle"></i>
+                        </div>
+                        <div class="card-content">
+                            <h3>Expired VLANs</h3>
+                            <p id="expiredVlans" class="card-number">0</p>
+                        </div>
+                    </div>
+                    <div class="overview-card">
+                        <div class="card-icon device">
+                            <i class="fas fa-server"></i>
+                        </div>
+                        <div class="card-content">
+                            <h3>Device Status</h3>
+                            <p id="deviceStatus" class="card-status">Offline</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="overview-grid">
+                    <div class="overview-section-card">
+                        <h3><i class="fas fa-chart-pie"></i> VLAN Distribution</h3>
+                        <canvas id="vlanChart"></canvas>
+                    </div>
+                    <div class="overview-section-card">
+                        <h3><i class="fas fa-history"></i> Recent Activities</h3>
+                        <div id="recentActivities"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VLANs Section -->
+            <section id="vlans" class="content-section">
+                <div class="section-header">
+                    <h2>Manage VLANs</h2>
+                    <button id="createVlanBtn" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Create New VLAN
+                    </button>
+                </div>
+
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>VLAN ID</th>
+                                <th>Name</th>
+                                <th>Status</th>
+                                <th>Created By</th>
+                                <th>Subnet</th>
+                                <th>Max Hosts</th>
+                                <th>Created At</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="vlansTableBody">
+                            <tr>
+                                <td colspan="8" style="text-align: center; padding: 20px;">
+                                    <i class="fas fa-spinner fa-spin"></i> Loading VLANs...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Users Section -->
+            <section id="users" class="content-section">
+                <div class="section-header">
+                    <h2>Registered Users</h2>
+                </div>
+
+                <div class="users-grid" id="usersGrid">
+                    <div style="text-align: center; padding: 20px; grid-column: 1/-1;">
+                        <i class="fas fa-spinner fa-spin"></i> Loading users...
+                    </div>
+                </div>
+            </section>
+
+            <!-- Activities Section -->
+            <section id="activities" class="content-section">
+                <div class="section-header">
+                    <h2>Activity Logs</h2>
+                    <button id="refreshActivitiesBtn" class="btn btn-secondary">
+                        <i class="fas fa-sync"></i> Refresh
+                    </button>
+                </div>
+
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>User</th>
+                                <th>Action</th>
+                                <th>Details</th>
+                                <th>Status</th>
+                                <th>IP Address</th>
+                            </tr>
+                        </thead>
+                        <tbody id="activitiesTableBody">
+                            <tr>
+                                <td colspan="6" style="text-align: center; padding: 20px;">
+                                    <i class="fas fa-spinner fa-spin"></i> Loading activities...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Device Section -->
+            <section id="device" class="content-section">
+                <div class="section-header">
+                    <h2>Device Management</h2>
+                </div>
+
+                <div class="device-status-card">
+                    <div class="device-header">
+                        <i class="fas fa-server"></i>
+                        <h3>Cisco NX-OS Device</h3>
+                    </div>
+                    <div class="device-info">
+                        <div class="info-row">
+                            <span>Status:</span>
+                            <span id="deviceStatusDetail" class="status-badge offline">Offline</span>
+                        </div>
+                        <div class="info-row">
+                            <span>Host:</span>
+                            <span id="deviceHost">sbx-nxos-mgmt.cisco.com</span>
+                        </div>
+                        <div class="info-row">
+                            <span>Device Type:</span>
+                            <span>Cisco NX-OS</span>
+                        </div>
+                    </div>
+                    <div class="device-actions">
+                        <button id="checkDeviceBtn" class="btn btn-primary">
+                            <i class="fas fa-sync"></i> Check Status
+                        </button>
+                        <button id="viewDeviceVlansBtn" class="btn btn-secondary">
+                            <i class="fas fa-eye"></i> View Device VLANs
+                        </button>
+                    </div>
+                </div>
+
+                <div class="device-vlans-section">
+                    <h3>Device VLANs</h3>
+                    <div id="deviceVlansContainer" class="device-vlans-table">
+                        <p style="text-align: center; padding: 20px;">Click "View Device VLANs" to fetch VLAN list</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Settings Section -->
+            <section id="settings" class="content-section">
+                <div class="section-header">
+                    <h2>Settings</h2>
+                </div>
+
+                <div class="settings-card">
+                    <h3>User Profile</h3>
+                    <div class="setting-item">
+                        <label>Name:</label>
+                        <p id="settingName">-</p>
+                    </div>
+                    <div class="setting-item">
+                        <label>NIM:</label>
+                        <p id="settingNim">-</p>
+                    </div>
+                    <div class="setting-item">
+                        <label>Email:</label>
+                        <p id="settingEmail">-</p>
+                    </div>
+                    <div class="setting-item">
+                        <label>Member Since:</label>
+                        <p id="settingCreatedAt">-</p>
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <h3>Preferences</h3>
+                    <div class="setting-item">
+                        <label>Default VLAN Expiry (hours):</label>
+                        <input type="number" id="defaultExpiry" value="24" min="1">
+                    </div>
+                    <button id="saveSettingsBtn" class="btn btn-primary">Save Settings</button>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Modal for Create VLAN -->
+    <div id="createVlanModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Create New VLAN</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <form id="createVlanForm" class="modal-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>VLAN ID *</label>
+                        <input type="number" id="vlanId" min="2" max="4094" required>
+                        <small id="vlanIdError" class="error-text"></small>
+                    </div>
+                    <div class="form-group">
+                        <label>VLAN Name *</label>
+                        <input type="text" id="vlanName" maxlength="32" required>
+                        <small id="vlanNameError" class="error-text"></small>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Subnet Mask</label>
+                        <input type="text" id="subnetMask" value="255.255.255.0">
+                        <small id="subnetError" class="error-text"></small>
+                    </div>
+                    <div class="form-group">
+                        <label>Max Hosts</label>
+                        <input type="number" id="maxHosts" disabled>
+                        <small>Calculated from subnet mask</small>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="vlanDescription" rows="3" maxlength="255"></textarea>
+                </div>
+
+                <div class="form-group checkbox">
+                    <input type="checkbox" id="autoDelete">
+                    <label for="autoDelete">Auto-delete VLAN after period (bonus feature)</label>
+                </div>
+
+                <div id="expiryOptions" class="form-group hidden">
+                    <label>Expiry Time (hours)</label>
+                    <input type="number" id="expiryHours" value="24" min="1">
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary modal-close-btn">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create VLAN</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal for Edit VLAN -->
+    <div id="editVlanModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Edit VLAN</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <form id="editVlanForm" class="modal-form">
+                <input type="hidden" id="editVlanId">
+                <div class="form-group">
+                    <label>VLAN ID</label>
+                    <input type="number" id="editVlanIdField" disabled>
+                </div>
+                <div class="form-group">
+                    <label>VLAN Name</label>
+                    <input type="text" id="editVlanName" maxlength="32">
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="editVlanDescription" rows="3" maxlength="255"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary modal-close-btn">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Update VLAN</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>
