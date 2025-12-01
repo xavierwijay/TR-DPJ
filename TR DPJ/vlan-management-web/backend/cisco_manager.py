@@ -144,12 +144,64 @@ class CiscoDeviceManager:
             logger.error(f"Failed to verify VLAN: {e}")
             return False, None
     
-    def get_all_vlans(self) -> Tuple[bool, Optional[str]]:
+    def parse_vlan_output(self, output: str) -> List[Dict]:
+        """
+        Parse 'show vlan brief' output into structured data
+        
+        Args:
+            output: Raw output from 'show vlan brief'
+            
+        Returns:
+            List[Dict]: List of VLAN dictionaries
+        """
+        vlans = []
+        lines = output.strip().split('\n')
+        
+        # Skip header lines (usually first 2-4 lines)
+        data_started = False
+        for line in lines:
+            line = line.strip()
+            
+            # Skip empty lines
+            if not line:
+                continue
+            
+            # Skip header lines
+            if 'VLAN' in line and 'Name' in line:
+                data_started = True
+                continue
+            if '----' in line:
+                continue
+            
+            if not data_started:
+                continue
+            
+            # Parse VLAN data line
+            # Format: VLAN_ID  Name                             Status    Ports
+            parts = line.split()
+            if len(parts) >= 3:
+                try:
+                    vlan_id = int(parts[0])
+                    vlan_name = parts[1]
+                    status = parts[2] if len(parts) > 2 else 'active'
+                    
+                    vlans.append({
+                        'vlan_id': vlan_id,
+                        'vlan_name': vlan_name,
+                        'status': status
+                    })
+                except ValueError:
+                    # Skip lines that don't start with a number
+                    continue
+        
+        return vlans
+    
+    def get_all_vlans(self) -> Tuple[bool, Optional[List[Dict]]]:
         """
         Get all VLANs from device
         
         Returns:
-            Tuple[bool, Optional[str]]: (success, vlan_info)
+            Tuple[bool, Optional[List[Dict]]]: (success, vlan_list)
         """
         if not self.connection:
             return False, None
@@ -157,7 +209,12 @@ class CiscoDeviceManager:
         try:
             logger.info("Retrieving all VLANs...")
             output = self.connection.send_command("show vlan brief")
-            return True, output
+            
+            # Parse the output into structured data
+            vlans = self.parse_vlan_output(output)
+            logger.info(f"Found {len(vlans)} VLANs")
+            
+            return True, vlans
             
         except Exception as e:
             logger.error(f"Failed to retrieve VLANs: {e}")

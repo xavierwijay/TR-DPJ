@@ -9,6 +9,22 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
+    <!-- Page Loader Overlay -->
+    <div id="pageLoader" class="loader-overlay">
+        <div class="loader">
+            <div class="justify-content-center jimu-primary-loading"></div>
+        </div>
+        <p class="loader-text">Loading Dashboard...</p>
+    </div>
+
+    <!-- Operation Loader Overlay (for CRUD operations) -->
+    <div id="operationLoader" class="loader-overlay hidden">
+        <div class="loader">
+            <div class="justify-content-center jimu-primary-loading"></div>
+        </div>
+        <p id="operationLoaderText" class="loader-text">Processing...</p>
+    </div>
+
     <!-- Sidebar Navigation -->
     <div class="sidebar">
         <div class="sidebar-header">

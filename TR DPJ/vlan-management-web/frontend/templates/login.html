@@ -9,6 +9,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
+    <!-- Login Loader Overlay -->
+    <div id="loginLoader" class="loader-overlay hidden">
+        <div class="loader">
+            <div class="justify-content-center jimu-primary-loading"></div>
+        </div>
+        <p class="loader-text">Authenticating...</p>
+    </div>
+
     <div class="login-container">
         <div class="login-card">
             <div class="login-header">
@@ -81,6 +89,14 @@
     </div>
 
     <script>
+        function showLoader() {
+            document.getElementById('loginLoader').classList.remove('hidden');
+        }
+
+        function hideLoader() {
+            document.getElementById('loginLoader').classList.add('hidden');
+        }
+
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
 
@@ -94,6 +110,9 @@
                 return;
             }
 
+            // Show loader
+            showLoader();
+
             try {
                 const response = await fetch('/login', {
                     method: 'POST',
@@ -106,14 +125,16 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    showAlert('Login successful! Redirecting...', 'success');
+                    document.querySelector('#loginLoader .loader-text').textContent = 'Login successful! Redirecting...';
                     setTimeout(() => {
                         window.location.href = '/dashboard';
-                    }, 1500);
+                    }, 1000);
                 } else {
+                    hideLoader();
                     showAlert(data.error || 'Login failed', 'error');
                 }
             } catch (error) {
+                hideLoader();
                 showAlert('An error occurred: ' + error.message, 'error');
             }
         });

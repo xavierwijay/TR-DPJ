@@ -2,34 +2,75 @@
 
 let currentChart = null;
 
+// ==================== LOADER FUNCTIONS ====================
+function showPageLoader() {
+  const loader = document.getElementById("pageLoader");
+  if (loader) {
+    loader.classList.remove("hidden");
+  }
+}
+
+function hidePageLoader() {
+  const loader = document.getElementById("pageLoader");
+  if (loader) {
+    loader.classList.add("hidden");
+  }
+}
+
+function showOperationLoader(text = "Processing...") {
+  const loader = document.getElementById("operationLoader");
+  const loaderText = document.getElementById("operationLoaderText");
+  if (loader) {
+    loader.classList.remove("hidden");
+    if (loaderText) {
+      loaderText.textContent = text;
+    }
+  }
+}
+
+function hideOperationLoader() {
+  const loader = document.getElementById("operationLoader");
+  if (loader) {
+    loader.classList.add("hidden");
+  }
+}
+
 // Load user data on page load
 document.addEventListener("DOMContentLoaded", async () => {
-  // Load user info
-  await loadUserInfo();
+  // Show page loader
+  showPageLoader();
 
-  // Setup navigation
-  setupNavigation();
+  try {
+    // Load user info
+    await loadUserInfo();
 
-  // Setup modals
-  setupModals();
+    // Setup navigation
+    setupNavigation();
 
-  // Load initial data
-  await loadOverviewData();
+    // Setup modals
+    setupModals();
 
-  // Setup event listeners
-  setupEventListeners();
+    // Load initial data
+    await loadOverviewData();
 
-  // Load all VLANs
-  await loadVlans();
+    // Setup event listeners
+    setupEventListeners();
 
-  // Load users
-  await loadUsers();
+    // Load all VLANs
+    await loadVlans();
 
-  // Load activities
-  await loadActivities();
+    // Load users
+    await loadUsers();
 
-  // Check device status
-  await checkDeviceStatus();
+    // Load activities
+    await loadActivities();
+
+    // Check device status
+    await checkDeviceStatus();
+  } finally {
+    // Hide page loader after everything is loaded
+    hidePageLoader();
+  }
 });
 
 // Load user info from server
@@ -357,10 +398,18 @@ async function loadActivities() {
 }
 
 // Check device status
-async function checkDeviceStatus() {
+async function checkDeviceStatus(showLoader = false) {
   try {
+    if (showLoader) {
+      showOperationLoader("Checking Cisco device status...");
+    }
+    
     const response = await fetch("/api/device/status");
     const data = await response.json();
+
+    if (showLoader) {
+      hideOperationLoader();
+    }
 
     if (data.success && data.data.connected) {
       document.getElementById("deviceStatus").textContent = "Online";
@@ -377,6 +426,9 @@ async function checkDeviceStatus() {
     }
   } catch (error) {
     console.error("Error checking device status:", error);
+    if (showLoader) {
+      hideOperationLoader();
+    }
   }
 }
 
@@ -423,7 +475,7 @@ function setupEventListeners() {
   // Device buttons
   document
     .getElementById("checkDeviceBtn")
-    .addEventListener("click", checkDeviceStatus);
+    .addEventListener("click", () => checkDeviceStatus(true));
   document
     .getElementById("viewDeviceVlansBtn")
     .addEventListener("click", loadDeviceVlans);
@@ -460,6 +512,9 @@ async function createVlan(e) {
   const expiryHours =
     parseInt(document.getElementById("expiryHours").value) || 24;
 
+  // Show loader
+  showOperationLoader("Creating VLAN on Cisco device...");
+
   try {
     const response = await fetch("/api/vlans", {
       method: "POST",
@@ -489,6 +544,8 @@ async function createVlan(e) {
   } catch (error) {
     console.error("Error creating VLAN:", error);
     showToast("An error occurred", "error");
+  } finally {
+    hideOperationLoader();
   }
 }
 
@@ -508,6 +565,9 @@ async function updateVlan(e) {
   const vlanId = document.getElementById("editVlanId").value;
   const vlanName = document.getElementById("editVlanName").value;
   const description = document.getElementById("editVlanDescription").value;
+
+  // Show loader
+  showOperationLoader("Updating VLAN on Cisco device...");
 
   try {
     const response = await fetch(`/api/vlans/${vlanId}`, {
@@ -533,6 +593,8 @@ async function updateVlan(e) {
   } catch (error) {
     console.error("Error updating VLAN:", error);
     showToast("An error occurred", "error");
+  } finally {
+    hideOperationLoader();
   }
 }
 
@@ -541,6 +603,9 @@ async function deleteVlan(vlanId, vlanIdNum) {
   if (!confirm(`Are you sure you want to delete VLAN ${vlanIdNum}?`)) {
     return;
   }
+
+  // Show loader
+  showOperationLoader("Deleting VLAN from Cisco device...");
 
   try {
     const response = await fetch(`/api/vlans/${vlanId}`, {
@@ -559,18 +624,24 @@ async function deleteVlan(vlanId, vlanIdNum) {
   } catch (error) {
     console.error("Error deleting VLAN:", error);
     showToast("An error occurred", "error");
+  } finally {
+    hideOperationLoader();
   }
 }
 
 // Load device VLANs
 async function loadDeviceVlans() {
   try {
+    showOperationLoader("Fetching VLANs from Cisco device...");
+    
     const container = document.getElementById("deviceVlansContainer");
     container.innerHTML =
       '<p style="text-align: center;"><i class="fas fa-spinner fa-spin"></i> Loading device VLANs...</p>';
 
     const response = await fetch("/api/device/vlans");
     const data = await response.json();
+
+    hideOperationLoader();
 
     if (response.ok && data.data) {
       const vlans = data.data.device_vlans;
@@ -601,6 +672,7 @@ async function loadDeviceVlans() {
     }
   } catch (error) {
     console.error("Error loading device VLANs:", error);
+    hideOperationLoader();
     document.getElementById("deviceVlansContainer").innerHTML =
       '<p style="text-align: center; padding: 20px; color: #ef4444;">Error loading device VLANs</p>';
   }
