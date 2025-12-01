@@ -403,7 +403,7 @@ async function checkDeviceStatus(showLoader = false) {
     if (showLoader) {
       showOperationLoader("Checking Cisco device status...");
     }
-    
+
     const response = await fetch("/api/device/status");
     const data = await response.json();
 
@@ -633,7 +633,7 @@ async function deleteVlan(vlanId, vlanIdNum) {
 async function loadDeviceVlans() {
   try {
     showOperationLoader("Fetching VLANs from Cisco device...");
-    
+
     const container = document.getElementById("deviceVlansContainer");
     container.innerHTML =
       '<p style="text-align: center;"><i class="fas fa-spinner fa-spin"></i> Loading device VLANs...</p>';
