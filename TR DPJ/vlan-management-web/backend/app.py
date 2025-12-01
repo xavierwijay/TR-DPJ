@@ -348,6 +348,8 @@ def register_routes(app: Flask):
                 return jsonify(format_error_response('Permission denied')), 403
             
             data = request.get_json()
+            old_vlan_name = vlan.vlan_name
+            new_vlan_name = data.get('vlan_name', old_vlan_name)
             
             # Update allowed fields
             if 'vlan_name' in data:
@@ -365,6 +367,20 @@ def register_routes(app: Flask):
                     return jsonify(format_error_response('Invalid subnet mask', msg)), 400
                 vlan.subnet_mask = data['subnet_mask']
                 vlan.max_hosts = calculate_max_hosts(data['subnet_mask'])
+            
+            # Update VLAN on Cisco device if name changed
+            if new_vlan_name != old_vlan_name:
+                cisco_manager = get_cisco_manager(app.config['CISCO_CONFIG'])
+                success, msg = cisco_manager.connect()
+                
+                if success:
+                    success, msg = cisco_manager.update_vlan(vlan.vlan_id, new_vlan_name)
+                    cisco_manager.disconnect()
+                    
+                    if not success:
+                        logger.warning(f"Failed to update VLAN on device: {msg}")
+                else:
+                    logger.warning(f"Could not connect to device for update: {msg}")
             
             vlan.updated_at = datetime.utcnow()
             db.session.commit()

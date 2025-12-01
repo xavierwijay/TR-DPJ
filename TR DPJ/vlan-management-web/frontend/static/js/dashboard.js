@@ -251,8 +251,16 @@ async function loadVlans() {
       }
 
       tableBody.innerHTML = vlans
-        .map(
-          (vlan) => `
+        .map((vlan) => {
+          // Escape quotes for onclick handlers
+          const escapedName = (vlan.vlan_name || "")
+            .replace(/'/g, "\\'")
+            .replace(/"/g, "&quot;");
+          const escapedDesc = (vlan.description || "")
+            .replace(/'/g, "\\'")
+            .replace(/"/g, "&quot;");
+
+          return `
                 <tr>
                     <td><strong>${vlan.vlan_id}</strong></td>
                     <td>${vlan.vlan_name}</td>
@@ -275,9 +283,9 @@ async function loadVlans() {
                         <div class="action-buttons">
                             <button class="btn btn-small btn-edit" onclick="editVlan('${
                               vlan.id
-                            }', '${vlan.vlan_id}', '${vlan.vlan_name}', '${
-            vlan.description || ""
-          }')">
+                            }', '${
+            vlan.vlan_id
+          }', '${escapedName}', '${escapedDesc}')">
                                 <i class="fas fa-edit"></i> Edit
                             </button>
                             <button class="btn btn-small btn-delete" onclick="deleteVlan('${
@@ -288,8 +296,8 @@ async function loadVlans() {
                         </div>
                     </td>
                 </tr>
-            `
-        )
+            `;
+        })
         .join("");
     }
   } catch (error) {
@@ -587,6 +595,8 @@ async function updateVlan(e) {
       showToast("VLAN updated successfully", "success");
       document.getElementById("editVlanModal").classList.remove("active");
       await loadVlans();
+      await loadOverviewData();
+      await loadActivities();
     } else {
       showToast(data.error || "Failed to update VLAN", "error");
     }
